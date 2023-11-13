@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Viewer, Worker } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
@@ -21,7 +20,7 @@ const Home = () => {
   //       console.log("null pdf file");
   //     }
   //   };
-
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     if (file !== null) {
@@ -29,7 +28,7 @@ const Home = () => {
       reader.readAsDataURL(file);
       reader.onload = (e) => {
         setViewFile(e.target.result);
-      }
+      };
     } else {
       setViewFile(null);
     }
@@ -41,6 +40,7 @@ const Home = () => {
     <div>
       <form onSubmit={handleSubmit}>
         <input
+          name="foo"
           type="file"
           accept="application/pdf"
           onChange={(e) => setFile(e.target.files[0])}
@@ -49,20 +49,11 @@ const Home = () => {
           view pdf
         </button>
       </form>
-      <div>
-        <PDFView file={viewFile}/>
-      </div>
-
-      {/* <div className="m-10">
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.6.172/build/pdf.worker.min.js">
-          {viewFile && (
-            <>
-              <Viewer fileUrl={viewFile} plugins={[newplugin]} />
-            </>
-          )}
-          {!viewFile && <>No PDF</>}
-        </Worker>
-      </div> */}
+      {viewFile && (
+        <div>
+          <PDFView viewFile={viewFile} file={file}/>
+        </div>
+      )}
     </div>
   );
 };

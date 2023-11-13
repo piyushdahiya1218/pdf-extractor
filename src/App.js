@@ -1,17 +1,16 @@
 import logo from "./logo.svg";
 import "./App.css";
 import Home from "./components/Home";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 function App() {
   return (
-    <div>
-      {/* <div className="fixed top-0 z-50 bg-gray-200 w-full">
-       <Header/>
-      </div> */}
-      <div className="mt-4">
-        <Home />
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home/>} />
+        {/* <Route path="/newpdf" element={<NewPDF/>} /> */}
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import testpdf from "./testpdf.pdf";
+import axios from "axios";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
-function PDFView(props) {
+axios.defaults.baseURL = "http://localhost:5000";
+
+const PDFView = (props) => {
   const [numPages, setNumPages] = useState();
   //   const [pageNumber, setPageNumber] = useState(1);
   const [checkboxStates, setCheckboxStates] = useState([]);
+  const [newPDF, setNewPDF] = useState();
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
@@ -25,9 +28,28 @@ function PDFView(props) {
     else return checkboxStates[pageNumber];
   }
 
-  function getNewPDF() {
-    console.log(checkboxStates)
-  }
+  const GetNewPDF = async () => {
+    const formData = new FormData()
+    formData.append("file", props.file)
+    try {
+      await axios
+        .post("/getnewpdf", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          console.log(response.statusText);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      // setNewPDF(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div>
@@ -35,7 +57,7 @@ function PDFView(props) {
         Page {pageNumber} of {numPages}
       </p> */}
       <Document
-        file={props.file}
+        file={props.viewFile}
         onLoadSuccess={onDocumentLoadSuccess}
         onLoadError={(error) => {
           console.log(error.message);
@@ -61,11 +83,12 @@ function PDFView(props) {
             );
           })}
       </Document>
-      <button className="bg-gray-200 p-2 rounded-lg mb-32" onClick={getNewPDF}>
-          download new pdf
+      <button className="bg-gray-200 p-2 rounded-lg mb-32" onClick={GetNewPDF}>
+        download new pdf
       </button>
+      {newPDF && <span>{newPDF}</span>}
     </div>
   );
-}
+};
 
 export default PDFView;
