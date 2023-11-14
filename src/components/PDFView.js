@@ -8,12 +8,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/l
 axios.defaults.baseURL = "http://localhost:5000";
 
 const PDFView = (props) => {
-  const [numPages, setNumPages] = useState();
+  const [totalPages, setTotalPages] = useState();
   //   const [pageNumber, setPageNumber] = useState(1);
   const [checkboxStates, setCheckboxStates] = useState([]);
 
   function onDocumentLoadSuccess({ numPages }) {
-    setNumPages(numPages);
+    setTotalPages(numPages);
   }
 
   function handleCheckboxChange(pageNumber) {
@@ -56,16 +56,33 @@ const PDFView = (props) => {
 
   const downloadNewPDF = async (fileName) => {
     try {
-      const response = await axios.get("/downloadnewpdf", {
-        params: {
-          fileName: fileName,
-        },
-        // responseType: "arraybuffer",
-        // headers: {
-        //   Accept: "application/pdf",
-        // },
-      });
-      pleaseDownloadNewPDF(response.data);
+      await axios
+        .post(
+          "/downloadnewpdf",
+          { fileName: fileName, totalPages: totalPages, checkboxStates: checkboxStates },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+        .then((res) => {
+          pleaseDownloadNewPDF(res.data);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+
+    //   const response = await axios.get("/downloadnewpdf", {
+    //     params: {
+    //       fileName: fileName,
+    //     },
+    //     // responseType: "arraybuffer",
+    //     // headers: {
+    //     //   Accept: "application/pdf",
+    //     // },
+    //   });
+    //   pleaseDownloadNewPDF(response.data);
 
       // FileSaver.saveAs(
       //   new Blob([response.data], { type: "application/pdf" }),
@@ -77,18 +94,24 @@ const PDFView = (props) => {
   };
 
   const getNewPDF = async () => {
-    checkboxStates.splice(0, 1);
     console.log(checkboxStates);
-
+    if(checkboxStates.length===0){
+        return;
+    }
+    checkboxStates.splice(0, 1);
     const formData = new FormData();
     formData.append("file", props.file);
     try {
       await axios
-        .post("/getnewpdf", {file: props.file, checkboxStates: checkboxStates}, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
+        .post(
+          "/getnewpdf",
+          { file: props.file },
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        )
         .then((response) => {
           downloadNewPDF(response.data.filename);
         })
@@ -115,7 +138,7 @@ const PDFView = (props) => {
           console.log(error.message);
         }}
       >
-        {Array.apply(null, Array(numPages))
+        {Array.apply(null, Array(totalPages))
           .map((x, i) => i + 1)
           .map((pageNumber) => {
             return (
