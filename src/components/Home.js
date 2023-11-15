@@ -35,23 +35,30 @@ const Home = () => {
   };
 
   //   const newplugin = defaultLayoutPlugin();
-
   return (
-    <div>
+    <div className="lg:m-16 md:m-12 sm:m-10">
       <form onSubmit={handleSubmit}>
+        {file && (
+          <button className="bg-gray-200 p-1 rounded-md lg:mr-4 md:mr-4 sm:mr-4" type="submit">
+            view pdf
+          </button>
+        )}
         <input
           name="foo"
           type="file"
           accept="application/pdf"
           onChange={(e) => setFile(e.target.files[0])}
         />
-        <button className="bg-gray-200 p-2 rounded-lg" type="submit">
-          view pdf
-        </button>
       </form>
       {viewFile && (
         <div>
-          <PDFView viewFile={viewFile} file={file}/>
+          <span className="text-gray-500">
+            Select checkbox for pages that you want to be included in new PDF
+            file. Button to download new PDF is at the bottom.
+          </span>
+          <div>
+            <PDFView viewFile={viewFile} file={file} />
+          </div>
         </div>
       )}
     </div>

@@ -11,6 +11,8 @@ const PDFView = (props) => {
   const [totalPages, setTotalPages] = useState();
   //   const [pageNumber, setPageNumber] = useState(1);
   const [checkboxStates, setCheckboxStates] = useState([]);
+  const [pagesSelected, setPagesSelected] = useState(false)
+
 
   function onDocumentLoadSuccess({ numPages }) {
     setTotalPages(numPages);
@@ -59,7 +61,11 @@ const PDFView = (props) => {
       await axios
         .post(
           "/downloadnewpdf",
-          { fileName: fileName, totalPages: totalPages, checkboxStates: checkboxStates },
+          {
+            fileName: fileName,
+            totalPages: totalPages,
+            checkboxStates: checkboxStates,
+          },
           {
             headers: {
               "Content-Type": "application/json",
@@ -73,16 +79,16 @@ const PDFView = (props) => {
           console.error(err);
         });
 
-    //   const response = await axios.get("/downloadnewpdf", {
-    //     params: {
-    //       fileName: fileName,
-    //     },
-    //     // responseType: "arraybuffer",
-    //     // headers: {
-    //     //   Accept: "application/pdf",
-    //     // },
-    //   });
-    //   pleaseDownloadNewPDF(response.data);
+      //   const response = await axios.get("/downloadnewpdf", {
+      //     params: {
+      //       fileName: fileName,
+      //     },
+      //     // responseType: "arraybuffer",
+      //     // headers: {
+      //     //   Accept: "application/pdf",
+      //     // },
+      //   });
+      //   pleaseDownloadNewPDF(response.data);
 
       // FileSaver.saveAs(
       //   new Blob([response.data], { type: "application/pdf" }),
@@ -94,11 +100,14 @@ const PDFView = (props) => {
   };
 
   const getNewPDF = async () => {
-    console.log(checkboxStates);
-    if(checkboxStates.length===0){
-        return;
-    }
     checkboxStates.splice(0, 1);
+    console.log(checkboxStates);
+    console.log(checkboxStates.length)
+    if(checkboxStates.length===0){
+      setPagesSelected(true);
+      return;
+    }
+    setPagesSelected(false)
     const formData = new FormData();
     formData.append("file", props.file);
     try {
@@ -143,12 +152,14 @@ const PDFView = (props) => {
           .map((pageNumber) => {
             return (
               <div>
-                <input
-                  type="checkbox"
-                  id={`checkbox-${pageNumber}`}
-                  checked={getState(pageNumber)}
-                  onChange={() => handleCheckboxChange(pageNumber)}
-                />
+                <div className="bg-blue-100 p-1 lg:mt-12 md:mt-10 sm:mt-8 w-80">
+                  <input
+                    type="checkbox"
+                    id={`checkbox-${pageNumber}`}
+                    checked={getState(pageNumber)}
+                    onChange={() => handleCheckboxChange(pageNumber)}
+                  />
+                </div>
                 <Page
                   pageNumber={pageNumber}
                   renderTextLayer={false}
@@ -158,7 +169,12 @@ const PDFView = (props) => {
             );
           })}
       </Document>
-      <button className="bg-gray-200 p-2 rounded-lg mb-32" onClick={getNewPDF}>
+      {pagesSelected && (
+        <div className="lg:mt-8 md:mt-6 sm:mt-6">
+          <span>select pages before downloading your new pdf</span>
+        </div>
+      )}
+      <button className="bg-gray-200 p-2 rounded-lg mb-32 mt-12 " onClick={getNewPDF}>
         download new pdf
       </button>
     </div>
