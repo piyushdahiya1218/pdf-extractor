@@ -1,23 +1,26 @@
 import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import axios from "axios";
 import FileSaver from "file-saver";
-import { uploadPDF, transformPDF, downloadPDF } from "../apis/events";
+import {
+  uploadPDF,
+  transformPDF,
+  downloadNewPDF as downloadNewPDF,
+} from "../apis/events";
 import { BUTTON_TEXT, PAGE_NOT_SELECTED_ERROR } from "../utils/constants";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
-axios.defaults.baseURL = "http://localhost:5000";
-
 const PDFView = (props) => {
-  const [totalPages, setTotalPages] = useState();
-  const [checkboxStates, setCheckboxStates] = useState([]);
-  const [pagesSelected, setPagesSelected] = useState(false);
+  const [totalPages, setTotalPages] = useState(); //total number of pages in pdf file
+  const [checkboxStates, setCheckboxStates] = useState([]); //array containing which pages are checked or unchecked
+  const [isPageSelected, setIsPageSelected] = useState(true); //bool to check whether atleast 1 page is selected before requesting new pdf download
 
+  // when pdf is loaded, extract total number of pages
   function onDocumentLoadSuccess({ numPages }) {
     setTotalPages(numPages);
   }
 
+  // refreshing checkboxStates array when a checkbox is checked or unchecked
   function handleCheckboxChange(pageNumber) {
     const updatedCheckboxStates = [...checkboxStates];
     const obj = {
@@ -28,6 +31,7 @@ const PDFView = (props) => {
     setCheckboxStates(updatedCheckboxStates);
   }
 
+  // check in array if the requested page number is checked or not
   function getState(pageNumber) {
     if (checkboxStates[pageNumber] === null) {
       return false;
@@ -36,29 +40,42 @@ const PDFView = (props) => {
     }
   }
 
-  const getNewPDF = async () => {
-    checkboxStates.splice(0, 1);
-    console.log(checkboxStates);
-    console.log(checkboxStates.length);
+  //checks if atleast 1 page is selected before the user tried to download new pdf
+  const isCheckboxStatesValid = () => {
+    checkboxStates.splice(0, 1); //remove 0th element as elements in this array follow 1 based indexing
     if (checkboxStates.length === 0) {
-      setPagesSelected(true);
-      return;
+      //if length of array is 0 that means no pages are selected
+      return false;
+    } else {
+      return true;
     }
-    setPagesSelected(false);
-    const formData = new FormData();
-    formData.append("file", props.file);
+  };
 
-    const uploadPDFResponse = await uploadPDF(props.file);
-    const transformPDFResponse = await transformPDF(
-      uploadPDFResponse.data.filename,
-      totalPages,
-      checkboxStates
-    );
-    const downloadPDFResponse = await downloadPDF(transformPDFResponse.data);
-    FileSaver.saveAs(
-      new Blob([downloadPDFResponse.data], { type: "application/pdf" }),
-      "result-pdf"
-    );
+  //validation, api calls, new pdf download
+  const getNewPDF = async () => {
+    if (!isCheckboxStatesValid()) {
+      setIsPageSelected(false);
+    } else {
+      setIsPageSelected(true);
+      //api calls to upload, transform, download the new pdf
+      const uploadPDFResponse = await uploadPDF(props.file); //response is the name of original file uploaded
+      const transformPDFResponse = await transformPDF(  //response is the path of transformed file
+        uploadPDFResponse.data.filename,
+        totalPages,
+        checkboxStates
+      );
+      const downloadPDFResponse = await downloadNewPDF( //response is the transformed pdf file
+        transformPDFResponse.data
+      ); 
+
+      //show user the download dialog
+      FileSaver.saveAs(
+        new Blob([downloadPDFResponse.data], { type: "application/pdf" }),
+        "result-pdf"
+      );
+      //reset checkbox states after new pdf is downloaded
+      setCheckboxStates([]);
+    }
   };
 
   return (
@@ -70,6 +87,7 @@ const PDFView = (props) => {
           console.log(error.message);
         }}
       >
+        {/* iterate over each page of the pdf, so that checkbox can be added to each page iteration */}
         {Array.apply(null, Array(totalPages))
           .map((x, i) => i + 1)
           .map((pageNumber) => {
@@ -95,7 +113,8 @@ const PDFView = (props) => {
             );
           })}
       </Document>
-      {pagesSelected && (
+      {/* visible when user tries to download new pdf without selecting any pages */}
+      {!isPageSelected && (
         <div className="lg:mt-8 md:mt-6 sm:mt-6">
           <span>{PAGE_NOT_SELECTED_ERROR}</span>
         </div>

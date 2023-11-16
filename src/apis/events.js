@@ -3,6 +3,7 @@ import { API_URL, BACKEND_SERVER_PORT_ADDRESS } from "../utils/constants";
 
 axios.defaults.baseURL = BACKEND_SERVER_PORT_ADDRESS;
 
+//api call to upload original pdf
 export async function uploadPDF(payload) {
   try {
     const response = await axios.post(
@@ -22,6 +23,7 @@ export async function uploadPDF(payload) {
   }
 }
 
+//api call to transform original pdf
 export async function transformPDF(fileName, totalPages, checkboxStates) {
   console.log(fileName);
   try {
@@ -46,7 +48,8 @@ export async function transformPDF(fileName, totalPages, checkboxStates) {
   }
 }
 
-export async function downloadPDF(modifiedFilePath) {
+//api call to download transformer new pdf
+export async function downloadNewPDF(modifiedFilePath) {
   try {
     const response = await axios.get(API_URL.DOWNLOAD_NEW_PDF, {
       params: {

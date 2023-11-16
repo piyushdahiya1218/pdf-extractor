@@ -8,6 +8,7 @@ const Home = () => {
   const [file, setFile] = useState(null);
   const [viewFile, setViewFile] = useState(null);
 
+  //converting pdf file to base64 string so that it can be used by <Document> in PDFView component.
   const handleSubmit = (e) => {
     e.preventDefault();
     if (file !== null) {
@@ -24,6 +25,7 @@ const Home = () => {
   return (
     <div className="lg:m-16 md:m-12 sm:m-10">
       <form onSubmit={handleSubmit}>
+        {/* view pdf button only visible when a pdf is uploaded in the form */}
         {file && (
           <button
             className="bg-gray-200 p-1 rounded-md lg:mr-4 md:mr-4 sm:mr-4"
@@ -45,6 +47,7 @@ const Home = () => {
             {NOTE}
           </span>
           <div>
+            {/* passing pdf file and its base64 string */}
             <PDFView viewFile={viewFile} file={file} />
           </div>
         </div>
