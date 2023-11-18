@@ -4,9 +4,9 @@ import FileSaver from "file-saver";
 import {
   uploadPDF,
   transformPDF,
-  downloadNewPDF as downloadNewPDF,
+  downloadNewPDF,
 } from "../apis/events";
-import { BUTTON_TEXT, PAGE_NOT_SELECTED_ERROR } from "../utils/constants";
+import { BUTTON_TEXT, PAGE_NOT_SELECTED_ERROR, LOADING } from "../utils/constants";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
@@ -14,6 +14,7 @@ const PDFView = (props) => {
   const [totalPages, setTotalPages] = useState(); //total number of pages in pdf file
   const [checkboxStates, setCheckboxStates] = useState([]); //array containing which pages are checked or unchecked
   const [isPageSelected, setIsPageSelected] = useState(true); //bool to check whether atleast 1 page is selected before requesting new pdf download
+  const [isDownloadButtonVisible, setIsDownloadButtonVisible] = useState(true); //bool to check if downloadNewPDF button is clicked. When it is clicked this turns true and disables this button to prevent repetetive API calls.
 
   // when pdf is loaded, extract total number of pages
   function onDocumentLoadSuccess({ numPages }) {
@@ -46,16 +47,30 @@ const PDFView = (props) => {
     if (checkboxStates.length === 0) {
       //if length of array is 0 that means no pages are selected
       return false;
-    } else {
-      return true;
+    } 
+    else {
+      var isAnyStateChecked=false;
+      checkboxStates.forEach(state => {
+        if(state?.isChecked===true){
+          isAnyStateChecked=true;
+        }
+      });
+      if(isAnyStateChecked){
+        return true
+      }
+      return false;
     }
   };
 
   //validation, api calls, new pdf download
   const getNewPDF = async () => {
+    if(!isDownloadButtonVisible){
+      return;
+    }
     if (!isCheckboxStatesValid()) {
       setIsPageSelected(false);
     } else {
+      setIsDownloadButtonVisible(false);
       setIsPageSelected(true);
       //api calls to upload, transform, download the new pdf
       const uploadPDFResponse = await uploadPDF(props.file); //response is the name of original file uploaded
@@ -75,6 +90,7 @@ const PDFView = (props) => {
       );
       //reset checkbox states after new pdf is downloaded
       setCheckboxStates([]);
+      setIsDownloadButtonVisible(true);
     }
   };
 
@@ -125,6 +141,9 @@ const PDFView = (props) => {
       >
         {BUTTON_TEXT.DOWNLOAD_NEW_PDF}
       </button>
+      {!isDownloadButtonVisible && (
+        <span className="ml-4">{LOADING}</span>
+      )}
     </div>
   );
 };

@@ -14,3 +14,5 @@ export const BUTTON_TEXT = {
 export const NOTE = "Select checkbox for pages that you want to be included in new PDF file. Button to download new PDF is at the bottom"
 
 export const PAGE_NOT_SELECTED_ERROR = "Select pages before downloading your new PDF"
+
+export const LOADING = "Loading ..."
